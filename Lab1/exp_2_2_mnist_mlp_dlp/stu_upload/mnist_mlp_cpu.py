@@ -49,12 +49,12 @@ class MNIST_MLP(object):
         return mat_data
 
     def load_data(self):
-        # TODO: 调用函数 load_mnist 读取和预处理 MNIST 中训练数据和测试数据的图像和标记
+        # 调用函数 load_mnist 读取和预处理 MNIST 中训练数据和测试数据的图像和标记
         print('Loading MNIST data from files...')
         train_images = self.load_mnist(os.path.join(MNIST_DIR, TRAIN_DATA), True)
-        train_labels = ________________
-        test_images = ________________
-        test_labels = ________________
+        train_labels = self.load_mnist(os.path.join(MNIST_DIR, TRAIN_LABEL), False)
+        test_images = self.load_mnist(os.path.join(MNIST_DIR, TEST_DATA), True)
+        test_labels = self.load_mnist(os.path.join(MNIST_DIR, TEST_LABEL), False)
         self.train_data = np.append(train_images, train_labels, axis=1)
         self.test_data = np.append(test_images, test_labels, axis=1)
         # self.test_data = np.concatenate((self.train_data, self.test_data), axis=0)
@@ -64,12 +64,12 @@ class MNIST_MLP(object):
         np.random.shuffle(self.train_data)
 
     def build_model(self):  # 建立网络结构
-        # TODO：建立三层神经网络结构
+        # 建立三层神经网络结构
         print('Building multi-layer perception model...')
         self.fc1 = FullyConnectedLayer(self.input_size, self.hidden1)
         self.relu1 = ReLULayer()
-        ________________
-        ________________
+        self.fc2 = FullyConnectedLayer(self.hidden1, self.hidden2)
+        self.relu2 = ReLULayer()
         self.fc3 = FullyConnectedLayer(self.hidden2, self.out_classes)
         self.softmax = SoftmaxLossLayer()
         self.update_layer_list = [self.fc1, self.fc2, self.fc3]
@@ -95,17 +95,19 @@ class MNIST_MLP(object):
         np.save(param_dir, params)
 
     def forward(self, input):  # 神经网络的前向传播
-        # TODO：神经网络的前向传播
         h1 = self.fc1.forward(input)
         h1 = self.relu1.forward(h1)
-        ________________
+        h2 = self.fc2.forward(h1)
+        h2 = self.relu2.forward(h2)
+        h3 = self.fc3.forward(h2)
         prob = self.softmax.forward(h3)
         return prob
 
     def backward(self):  # 神经网络的反向传播
-        # TODO：神经网络的反向传播
         dloss = self.softmax.backward()
-        ________________
+        dh3 = self.fc3.backward(dloss)
+        dh2 = self.relu2.backward(dh3)
+        dh2 = self.fc2.backward(dh2)
         dh1 = self.relu1.backward(dh2)
         dh1 = self.fc1.backward(dh1)
 
@@ -142,8 +144,8 @@ class MNIST_MLP(object):
         print('Accuracy in test set: %f' % accuracy)
 
 def build_mnist_mlp(param_dir='weight.npy'):
-    h1, h2, e = 32, 16, 10
-    mlp = MNIST_MLP(hidden1=h1, hidden2=h2, max_epoch=e)
+    h1, h2, e = 1024, 256, 10
+    mlp = MNIST_MLP(batch_size=10000, hidden1=h1, hidden2=h2, max_epoch=e)
     mlp.load_data()
     mlp.build_model()
     mlp.init_model()
