@@ -29,7 +29,7 @@ class VGG19(object):
         for i in range(0, len(filter_params), 2):
             self.filter_quant_params.append(pycnml.QuantParam(int(filter_params[i]), float(filter_params[i+1])))
         
-        # TODO: 使用net的createXXXLayer接口搭建VGG19网络
+        # 使用net的createXXXLayer接口搭建VGG19网络
         # creating layers
         self.net.setInputShape(1, 3, 224, 224)
         # conv1_1
@@ -40,13 +40,88 @@ class VGG19(object):
         self.net.createConvLayer('conv1_2', 64, 3, 1, 1, 1, self.input_quant_params[1])
         # relu1_2
         self.net.createReLuLayer('relu1_2')
+        # pool1
+        self.net.createPoolingLayer('pool1', 2, 2)
 
-        _______________________
+        # conv2_1
+        self.net.createConvLayer('conv2_1', 128, 3, 1, 1, 1, self.input_quant_params[2])
+        # relu2_1
+        self.net.createReLuLayer('relu2_1')
+        # conv2_2
+        self.net.createConvLayer('conv2_2', 128, 3, 1, 1, 1, self.input_quant_params[3])
+        # relu2_2
+        self.net.createReLuLayer('relu2_2')
+        # pool2
+        self.net.createPoolingLayer('pool2', 2, 2)
+
+        # conv3_1
+        self.net.createConvLayer('conv3_1', 256, 3, 1, 1, 1, self.input_quant_params[4])
+        # relu3_1
+        self.net.createReLuLayer('relu3_1')
+        # conv3_2
+        self.net.createConvLayer('conv3_2', 256, 3, 1, 1, 1, self.input_quant_params[5])
+        # relu3_2
+        self.net.createReLuLayer('relu3_2')
+        # conv3_3
+        self.net.createConvLayer('conv3_3', 256, 3, 1, 1, 1, self.input_quant_params[6])
+        # relu3_3
+        self.net.createReLuLayer('relu3_3')
+        # conv3_4
+        self.net.createConvLayer('conv3_4', 256, 3, 1, 1, 1, self.input_quant_params[7])
+        # relu3_4
+        self.net.createReLuLayer('relu3_4')
+        # pool3
+        self.net.createPoolingLayer('pool3', 2, 2)
+
+        # conv4_1
+        self.net.createConvLayer('conv4_1', 512, 3, 1, 1, 1, self.input_quant_params[8])
+        # relu4_1
+        self.net.createReLuLayer('relu4_1')
+        # conv4_2
+        self.net.createConvLayer('conv4_2', 512, 3, 1, 1, 1, self.input_quant_params[9])
+        # relu4_2
+        self.net.createReLuLayer('relu4_2')
+        # conv4_3
+        self.net.createConvLayer('conv4_3', 512, 3, 1, 1, 1, self.input_quant_params[10])
+        # relu4_3
+        self.net.createReLuLayer('relu4_3')
+        # conv4_4
+        self.net.createConvLayer('conv4_4', 512, 3, 1, 1, 1, self.input_quant_params[11])
+        # relu4_4
+        self.net.createReLuLayer('relu4_4')
+        # pool4
+        self.net.createPoolingLayer('pool4', 2, 2)
+
+        # conv5_1
+        self.net.createConvLayer('conv5_1', 512, 3, 1, 1, 1, self.input_quant_params[12])
+        # relu5_1
+        self.net.createReLuLayer('relu5_1')
+        # conv5_2
+        self.net.createConvLayer('conv5_2', 512, 3, 1, 1, 1, self.input_quant_params[13])
+        # relu5_2
+        self.net.createReLuLayer('relu5_2')
+        # conv5_3
+        self.net.createConvLayer('conv5_3', 512, 3, 1, 1, 1, self.input_quant_params[14])
+        # relu5_3
+        self.net.createReLuLayer('relu5_3')
+        # conv5_4
+        self.net.createConvLayer('conv5_4', 512, 3, 1, 1, 1, self.input_quant_params[15])
+        # relu5_4
+        self.net.createReLuLayer('relu5_4')
+        # pool5
+        self.net.createPoolingLayer('pool5', 2, 2)
         
         # flatten
         self.net.createFlattenLayer('flatten', [1, 512 * 7 * 7, 1, 1])
-        _______________________
-
+        
+        # fc6
+        self.net.createMlpLayer('fc6', 4096, self.input_quant_params[16])
+        # relu6
+        self.net.createReLuLayer('relu6')
+        # fc7
+        self.net.createMlpLayer('fc7', 4096, self.input_quant_params[17])
+        # relu7
+        self.net.createReLuLayer('relu7')
         # fc8
         self.net.createMlpLayer('fc8', 1000, self.input_quant_params[18])
         # softmax
@@ -63,17 +138,17 @@ class VGG19(object):
         for idx in range(self.net.size()):
             if 'conv' in self.net.getLayerName(idx):
                 weight, bias = params['layers'][0][idx][0][0][0][0]
-                # TODO：调整权重形状
+                # 调整权重形状
                 # matconvnet: weights dim [height, width, in_channel, out_channel]
                 # ours: weights dim [out_channel, in_channel, height, width]
-                weight = _______________________
+                weight = np.transpose(weight, [3, 2, 0, 1]).flatten().astype(np.float)
                 bias = bias.reshape(-1).astype(np.float)
                 self.net.loadParams(idx, weight, bias, self.filter_quant_params[count])
                 count += 1
             if 'fc' in self.net.getLayerName(idx):
                 # Loading params may take quite a while. Please be patient.
                 weight, bias = params['layers'][0][idx-1][0][0][0][0]
-                weight = _______________________
+                weight = np.transpose(weight.reshape([weight.shape[0] * weight.shape[1] * weight.shape[2], weight.shape[3]]), [1, 0]).flatten().astype(np.float)
                 bias = bias.reshape(-1).astype(np.float)
                 self.net.loadParams(idx, weight, bias, self.filter_quant_params[count])
                 count += 1
@@ -89,9 +164,9 @@ class VGG19(object):
         input_image -= image_mean
         input_image = np.reshape(input_image, [1]+list(input_image.shape))
         # input dim [N, channel, height, width]
-        # TODO：调整输入数据的形状
-        input_image = _______________________
-        input_data = _______________________
+        # 调整输入数据的形状
+        input_image = np.transpose(input_image, [0, 3, 1, 2])
+        input_data = input_image.flatten().astype(np.float)
         self.net.setInputData(input_data)
 
     def forward(self):
