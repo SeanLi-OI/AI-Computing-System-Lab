@@ -31,9 +31,53 @@ class VGG19(object):
         self.layers = {}
         self.layers['conv1_1'] = ConvolutionalLayer(3, 3, 64, 1, 1)
         self.layers['relu1_1'] = ReLULayer()
-        _______________________
-        _______________________
-        _______________________
+        self.layers['conv1_2'] = ConvolutionalLayer(3, 64, 64, 1, 1)
+        self.layers['relu1_2'] = ReLULayer()
+        self.layers['pool1'] = MaxPoolingLayer(2, 2)
+
+        self.layers['conv2_1'] = ConvolutionalLayer(3, 64, 128, 1, 1)
+        self.layers['relu2_1'] = ReLULayer()
+        self.layers['conv2_2'] = ConvolutionalLayer(3, 128, 128, 1, 1)
+        self.layers['relu2_2'] = ReLULayer()
+        self.layers['pool2'] = MaxPoolingLayer(2, 2)
+
+        self.layers['conv3_1'] = ConvolutionalLayer(3, 128, 256, 1, 1)
+        self.layers['relu3_1'] = ReLULayer()
+        self.layers['conv3_2'] = ConvolutionalLayer(3, 256, 256, 1, 1)
+        self.layers['relu3_2'] = ReLULayer()
+        self.layers['conv3_3'] = ConvolutionalLayer(3, 256, 256, 1, 1)
+        self.layers['relu3_3'] = ReLULayer()
+        self.layers['conv3_4'] = ConvolutionalLayer(3, 256, 256, 1, 1)
+        self.layers['relu3_4'] = ReLULayer()
+        self.layers['pool3'] = MaxPoolingLayer(2, 2)
+
+        self.layers['conv4_1'] = ConvolutionalLayer(3, 256, 512, 1, 1)
+        self.layers['relu4_1'] = ReLULayer()
+        self.layers['conv4_2'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu4_2'] = ReLULayer()
+        self.layers['conv4_3'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu4_3'] = ReLULayer()
+        self.layers['conv4_4'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu4_4'] = ReLULayer()
+        self.layers['pool4'] = MaxPoolingLayer(2, 2)
+
+        self.layers['conv5_1'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu5_1'] = ReLULayer()
+        self.layers['conv5_2'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu5_2'] = ReLULayer()
+        self.layers['conv5_3'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu5_3'] = ReLULayer()
+        self.layers['conv5_4'] = ConvolutionalLayer(3, 512, 512, 1, 1)
+        self.layers['relu5_4'] = ReLULayer()
+        self.layers['pool5'] = MaxPoolingLayer(2, 2)
+
+        self.layers['flatten'] = FlattenLayer([512, 7, 7], [25088])
+
+        self.layers['fc6'] = FullyConnectedLayer(25088, 4096)
+        self.layers['relu6'] = ReLULayer()
+
+        self.layers['fc7'] = FullyConnectedLayer(4096, 4096)
+        self.layers['relu7'] = ReLULayer()
 
         self.layers['fc8'] = FullyConnectedLayer(4096, 1000)
 
@@ -61,13 +105,13 @@ class VGG19(object):
                 weight, bias = params['layers'][0][idx][0][0][0][0]
                 # matconvnet: weights dim [height, width, in_channel, out_channel]
                 # ours: weights dim [in_channel, height, width, out_channel]
-                # TODO：调整参数的形状
-                weight = _______________________
-                bias = _______________________
+                # 调整参数的形状
+                weight = np.transpose(weight, [2, 0, 1, 3])
+                bias = bias.reshape(-1)
                 self.layers[self.param_layer_name[idx]].load_param(weight, bias)
             if idx >= 37 and 'fc' in self.param_layer_name[idx]:
                 weight, bias = params['layers'][0][idx-1][0][0][0][0]
-                weight = _______________________
+                weight = weight.reshape([weight.shape[0] * weight.shape[1] * weight.shape[2], weight.shape[3]])
                 self.layers[self.param_layer_name[idx]].load_param(weight, bias)
 
     def load_image(self, image_dir):
@@ -78,22 +122,22 @@ class VGG19(object):
         self.input_image -= self.image_mean
         self.input_image = np.reshape(self.input_image, [1]+list(self.input_image.shape))
         # input dim [N, channel, height, width]
-        # TODO：调整图片维度顺序
-        self.input_image = _______________________
+        # 调整图片维度顺序
+        self.input_image = np.transpose(self.input_image, [0, 3, 1, 2])
 
-    def forward(self):  # TODO：神经网络的前向传播
+    def forward(self):  # 神经网络的前向传播
         print('Inferencing...')
         start_time = time.time()
         current = self.input_image
         for idx in range(len(self.param_layer_name)):
             print('Inferencing layer: ' + self.param_layer_name[idx])
-            current = _______________________
+            current = self.layers[self.param_layer_name[idx]].forward(currrent)
         print('Inference time: %f' % (time.time()-start_time))
         return current
 
     def evaluate(self):
-        # TODO：获取神经网络前向传播的结果
-        prob = _______________________
+        # 获取神经网络前向传播的结果
+        prob = self.forward()
         top1 = np.argmax(prob[0])
         print('Classification result: id = %d, prob = %f' % (top1, prob[0, top1]))
 
