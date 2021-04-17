@@ -1,1 +1,2 @@
 Lab2/imagenet-vgg-verydeep-19.mat filter=lfs diff=lfs merge=lfs -text
+Lab3/exp_4_1_vgg19_student/imagenet-vgg-verydeep-19.mat filter=lfs diff=lfs merge=lfs -text

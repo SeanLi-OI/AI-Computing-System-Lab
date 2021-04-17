@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.vscode/
+Lab2/exp_3_3_style_transfer/output/
