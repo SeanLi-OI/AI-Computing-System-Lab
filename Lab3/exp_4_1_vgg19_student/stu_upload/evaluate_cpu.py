@@ -1,3 +1,4 @@
+# coding=utf-8
 import numpy as np
 import struct
 import os
@@ -36,31 +37,35 @@ def net(data_path, input_image):
     current = input_image
     for i, name in enumerate(layers):
         if name[:4] == 'conv':
-            # TODO: 从模型中读取权重、偏置加数，计算卷积结果 current
+            # 从模型中读取权重、偏置加数，计算卷积结果 current
             kernels, bias = weights[i][0][0][0][0]
-            # matconvnet: weights are [height, width, in_channels, out_channels]
-            # tensorflow: weights are [in_channels, height, width, out_channels]
-            ____________________
-            current = ____________________
+            # matconvnet: weights are [width, height, in_channels, out_channels]
+            # tensorflow: weights are [height, width, in_channels, out_channels]
+            kernels = kernels.transpose(1, 0, 2, 3)
+            current = _conv_layer(current, kernels, bias)
         elif name[:4] == 'relu':
-            # TODO: 执行 ReLU 计算，计算结果存入 current
-            ____________________
+            # 执行 ReLU 计算，计算结果存入 current
+            current = tf.nn.relu(current)
         elif name[:4] == 'pool':
-            # TODO: 执行 pool 计算，计算结果存入 current
-            ____________________
+            # 执行 pool 计算，计算结果存入 current
+            current = _pool_layer(current)
         elif name == 'softmax':
-            # TODO: 执行 softmax 计算，计算结果存入 current
-            ____________________
+            # 执行 softmax 计算，计算结果存入 current
+            current = tf.nn.softmax(current, axis=1)
         elif name  == 'fc6':
-            # TODO: 执行全连接层计算，计算结果存入 current
+            # 执行全连接层计算，计算结果存入 current
             kernels, bias = weights[i][0][0][0][0]
-            ____________________
+            current = tf.reshape(current, [-1, current.shape[1]*current.shape[2]*current.shape[3]])
+            kernels = tf.reshape(kernels, [kernels.shape[0]*kernels.shape[1]*kernels.shape[2], -1])
+            current = tf.nn.bias_add(tf.matmul(current, kernels), bias.flatten())
         elif name  == 'fc7':
             kernels, bias = weights[i][0][0][0][0]
-            ____________________
+            kernels = tf.reshape(kernels, [kernels.shape[0]*kernels.shape[1]*kernels.shape[2], -1])
+            current = tf.nn.bias_add(tf.matmul(current, kernels), bias.flatten())
         elif name  == 'fc8':
             kernels, bias = weights[i][0][0][0][0]
-            ____________________
+            kernels = tf.reshape(kernels, [kernels.shape[0]*kernels.shape[1]*kernels.shape[2], -1])
+            current = tf.nn.bias_add(tf.matmul(current, kernels), bias.flatten())
 
         net[name] = current 
 
@@ -69,21 +74,21 @@ def net(data_path, input_image):
 
 
 def _conv_layer(input, weights, bias):
-    # TODO: 定义卷积层的操作步骤，input 为输入张量，weights 为权重参数，bias 为偏置参数，返回计算的结果
-    ____________________
+    # 定义卷积层的操作步骤，input 为输入张量，weights 为权重参数，bias 为偏置参数，返回计算的结果
+    return tf.nn.bias_add(tf.nn.conv2d(input, weights, 1, "SAME"), bias.flatten())
 
 def _pool_layer(input):
-    # TODO: 定义最大池化的操作步骤，input 为输入张量，返回池化操作后的计算结果
-    ____________________
+    # 定义最大池化的操作步骤，input 为输入张量，返回池化操作后的计算结果
+    return tf.nn.max_pool2d(input, 2, 2, "VALID")
 
 def preprocess(image,mean):
     return image - mean
 
 def load_image(path):
-    # TODO: 使用 scipy.misc 模块读入输入图像，调用 preprocess 函数对图像进行预处理，并返回形状为（1,244,244,3）的数组 image
+    # 使用 scipy.misc 模块读入输入图像，调用 preprocess 函数对图像进行预处理，并返回形状为（1,244,244,3）的数组 image
     mean = np.array([123.68, 116.779, 103.939])
-    image = ____________________
-    ____________________
+    image = scipy.misc.imresize(scipy.misc.imread(path), (224, 224, 3))
+    image = np.expand_dims(preprocess(image, mean),axis=0)
     return image
 
 if __name__ == '__main__':
@@ -92,13 +97,13 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         img_placeholder = tf.placeholder(tf.float32, shape=(1,224,224,3),
                                          name='img_placeholder')
-        # TODO: 调用 net 函数，生成 VGG19 网络模型并保存在 nets 中
-        nets = ____________________
+        # 调用 net 函数，生成 VGG19 网络模型并保存在 nets 中
+        nets = net(VGG_PATH, img_placeholder)
 
         for i in range(10):
             start = time.time()
-            # TODO: 计算 nets
-            preds = ____________________
+            # 计算 nets
+            preds = sess.run(nets, feed_dict={img_placeholder:input_image})
             end = time.time()
             delta_time = end - start	
             print("processing time: %s" % delta_time)
