@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import print_function
 import sys, os, pdb
 sys.path.insert(0, 'src')
@@ -124,8 +125,8 @@ def main():
     options = parser.parse_args()
     check_opts(options)
 
-    # TODO：获取风格图像 style_target 以及内容图像数组 content_targets
-    style_target = ___________________
+    # 获取风格图像 style_target 以及内容图像数组 content_targets
+    style_target =get_img(options.style)
     if not options.slow:
         content_targets = _get_files(options.train_path)
     elif options.test:
