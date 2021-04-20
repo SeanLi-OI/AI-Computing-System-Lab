@@ -130,3 +130,5 @@ dmypy.json
 
 .vscode/
 Lab2/exp_3_3_style_transfer/output/
+Lab3/exp_4_1_vgg19_student/models/
+Lab3/exp_4_2_fast_style_transfer_infer_student/out
