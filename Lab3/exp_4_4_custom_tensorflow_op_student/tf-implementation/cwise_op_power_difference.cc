@@ -22,18 +22,18 @@ limitations under the License.
 //#include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #if CAMBRICON_MLU
-#include "tensorflow/core/kernels/cwise_op_power_difference_mlu.h"
+//#include "tensorflow/core/kernels/cwise_op_power_difference_mlu.h"
 #endif  // CAMBRICON_MLU
 namespace tensorflow {
 
 #if CAMBRICON_MLU
-#define REGISTER_MLU(T)                                         \
+/* #define REGISTER_MLU(T)                                         \
   REGISTER_KERNEL_BUILDER(                                      \
       Name("PowerDifference")                                 \
           .Device(DEVICE_MLU)                                   \
           .TypeConstraint<T>("T"),                              \
       MLUPowerDifferenceOp<T>);
-TF_CALL_MLU_FLOAT_TYPES(REGISTER_MLU);
+TF_CALL_MLU_FLOAT_TYPES(REGISTER_MLU); */
 #endif  // CAMBRICON_MLU
 
 //#if CAMBRICON_MLU
@@ -100,8 +100,15 @@ class PowerDifferenceOp : public OpKernel {
       const int POW = input_pow(0); 
       float tmp = 0;
 
-      // TODO: 补全 power_diference 算子计算部分
-      ___________________
+      // 补全 power_diference 算子计算部分
+      for (int i = 0; i < N; i ++) {
+        // output(i) = (input_x(i) - input_y(i)) ** input_power;
+        tmp = input_x(i) - input_y(i);
+        output(i) = tmp;
+        for (int j = 0; j < POW - 1; j ++) {
+          output(i) = output(i) * tmp;
+        }
+      }
     }
 };
 
