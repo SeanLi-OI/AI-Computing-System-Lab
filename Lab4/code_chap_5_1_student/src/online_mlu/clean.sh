@@ -1,0 +1,2 @@
+rm *.jpg
+rm *.pyc

@@ -1,0 +1,1 @@
+rm offline_models/*
