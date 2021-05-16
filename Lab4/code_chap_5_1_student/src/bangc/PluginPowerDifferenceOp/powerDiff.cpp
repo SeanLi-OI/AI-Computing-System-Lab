@@ -5,12 +5,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-// TODO：补充PowerDifferenceKernel参数
-void PowerDifferenceKernel(...);
+// 补充PowerDifferenceKernel参数
+void PowerDifferenceKernel(half* input1, half* input2, int pow, half* output, int len);
 #ifdef __cplusplus
 }
 #endif
-void PowerDifferenceKernel(...);
+void PowerDifferenceKernel(half* input1, half* input2, int pow, half* output, int len);
 
 int MLUPowerDifferenceOp(float* input1,float* input2, int pow, float*output, int dims_a) {
   
@@ -53,8 +53,9 @@ int MLUPowerDifferenceOp(float* input1,float* input2, int pow, float*output, int
     printf("cnrtMalloc output Failed!\n");
     exit(-1);
   }
-  // TODO：完成cnrtMemcpy拷入函数
-  ...
+  // 完成cnrtMemcpy拷入函数
+  cnrtMemcpy(mlu_input1, input1_half, dims_a * sizeof(half), CNRT_MEM_TRANS_DIR_HOST2DEV);
+  cnrtMemcpy(mlu_input2, input2_half, dims_a * sizeof(half), CNRT_MEM_TRANS_DIR_HOST2DEV);
  
   //kernel parameters
   cnrtKernelParamsBuffer_t params;
@@ -66,8 +67,8 @@ int MLUPowerDifferenceOp(float* input1,float* input2, int pow, float*output, int
   cnrtKernelParamsBufferAddParam(params, &dims_a, sizeof(int)); 
   cnrtPlaceNotifier(event_start, pQueue);
 
-  // TODO：完成cnrtInvokeKernel函数
-  ...
+  // 完成cnrtInvokeKernel函数
+  cnrtInvokeKernel_V2((void*)&PowerDifferenceKernel, dim, params, c, pQueue);
   
 
   if (CNRT_RET_SUCCESS != cnrtSyncQueue(pQueue))
@@ -78,8 +79,8 @@ int MLUPowerDifferenceOp(float* input1,float* input2, int pow, float*output, int
   cnrtPlaceNotifier(event_end, pQueue);
   
   //get output data
-  // TODO：完成cnrtMemcpy拷出函数
-  ...  
+  // 完成cnrtMemcpy拷出函数
+  cnrtMemcpy(output_half, mlu_output, dims_a * sizeof(half), CNRT_MEM_TRANS_DIR_DEV2HOST);
 
   cnrtConvertHalfToFloatArray(output, output_half,dims_a );
 

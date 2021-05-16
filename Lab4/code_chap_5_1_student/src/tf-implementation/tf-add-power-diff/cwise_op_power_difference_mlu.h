@@ -28,10 +28,64 @@ class MLUPowerDifferenceOp : public MLUOpKernel {
           MLUOpKernel(ctx) {}
 
   void ComputeOnMLU(OpKernelContext* ctx) override {
-      //输入数据处理与条件判断
-      ......
-      // stream调用Powerdifference接口
-      OP_REQUIRES_OK(ctx, stream->PowerDifference(...));
+    //auto* stream = ctx->op_device_context()->mlu_stream();
+    //auto* mlustream_exec = ctx->op_device_context()->mlu_stream()->parent();
+    se::mlu::MLUStream* stream = static_cast<se::mlu::MLUStream*>(
+        ctx->op_device_context()->stream()->implementation());
+    const Tensor& a = ctx->input(0);
+    const Tensor& b = ctx->input(1);
+    const Tensor& c = ctx->input(2);
+    string op_parameter = ctx->op_kernel().type_string()
+                          + "/" + a.shape().DebugString()
+                          + "/" + b.shape().DebugString();
+    //MLU_OP_CHECK_UNSUPPORTED(mlustream_exec, op_parameter, ctx);
+    const string op = ctx->op_kernel().type_string();
+    const int dims_a = a.dims();
+    const int dims_b = b.dims();
+    // get the output shape
+    TensorShape shape;
+    int max_dims = dims_a >= dims_b ? dims_a : dims_b;
+    for (int i = 0; i < max_dims; i++) {
+      // if the dim exist in one of the input tensor, set the dim size of
+      // the tensor to the output shape
+      // e.g. tensora: n h w c   tensorb: w c   output: (n h) w c
+      if (max_dims - i > dims_a) {
+        shape.InsertDim(i, b.dim_size(i));
+      } else if (max_dims - i > dims_b) {
+        shape.InsertDim(i, a.dim_size(i));
+      } else {
+        // if the dim exist in both of the input tensor, set the bigger dim size
+        // to the output shape
+        int idx_a = dims_b >= dims_a ? (i + dims_a - dims_b) : i;
+        int idx_b = dims_a >= dims_b ? (i + dims_b - dims_a) : i;
+        int dim_a = a.dim_size(idx_a);
+        int dim_b = b.dim_size(idx_b);
+        // if the dim size of input tensors not equal and
+        // nor of them equal to 1, input tensors is invalid
+        OP_REQUIRES(ctx, dim_a == dim_b || dim_a == 1 || dim_b == 1,
+            errors::InvalidArgument(
+              "PowerDifferenceOp: Not supported tensor shape, input1: ",
+              a.shape().DebugString(),
+              ", input2: ", b.shape().DebugString()));
+        int min_dim = dim_a < dim_b ? dim_a : dim_b;
+        if (min_dim == 0) {
+          shape.InsertDim(i, 0);
+        } else {
+          shape.InsertDim(i, dim_a > dim_b ? dim_a : dim_b);
+        }
+      }
+    }
+
+    //bool power_check = (c.dims() == 1 && c.dim_size(0) == 1) || c.dims() == 0;
+    bool power_check = (c.dims() == 1) || c.dims() == 0;
+    OP_REQUIRES(ctx, power_check, errors::InvalidArgument("power should be [1] or scalar"));
+
+    int power_value = c.dim_size(0);
+
+    Tensor* output = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, shape, &output));
+    OP_REQUIRES_OK(ctx, stream->PowerDifference(ctx,
+          const_cast<Tensor *>(&a), const_cast<Tensor *>(&b), output, power_value));
   }
 };
 
