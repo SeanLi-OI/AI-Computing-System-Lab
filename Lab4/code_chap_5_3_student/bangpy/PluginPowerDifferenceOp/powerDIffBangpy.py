@@ -36,33 +36,39 @@ def power_diff():
         core_dim= bp.builtin_var("coreDim")
         cluster_id = bp.builtin_var("clusterId")
         task_id = bp.Scalar(dtype=bangpy.int32, name="task_id", value=cluster_id * core_dim + core_id)
-        # TODO： 计算分片
-        quotient = ........
+        # 计算分片
+        quotient = len / SHAPE
+        rem = len % SHAPE
+        if SHAPE!=0:
+            quotient += 1
 
-        
-        # TODO: 条件判断，确保单核运行
-        with bp.if_scope(task_id...):
+        # 条件判断，确保单核运行
+        with bp.if_scope(task_id==0):
             # 张量定义
-            input1 = bp.Tensor(shape=(...), name="input1",
+            input1 = bp.Tensor(shape=(len,), name="input1",
                                dtype=dtype, scope="global")
-            input2 = bp.Tensor(shape=(...), name="input2",
+            input2 = bp.Tensor(shape=(len,), name="input2",
                                dtype=dtype, scope="global")
-            output = bp.Tensor(shape=(...), name="output",
+            output = bp.Tensor(shape=(len,), name="output",
                                dtype=dtype, scope="global")
-            input1_nram = bp.Tensor(shape=(...), name="input1_nram",
+            input1_nram = bp.Tensor(shape=(SHAPE,), name="input1_nram",
                                     dtype=dtype, scope="nram")
-            input2_nram = bp.Tensor(shape=(...), name="input2_nram",
+            input2_nram = bp.Tensor(shape=(SHAPE,), name="input2_nram",
                                     dtype=dtype, scope="nram")
-            # TODO：条件与循环控制
+            # 条件与循环控制
             with bp.for_range(0, quotient) as i:
-                # TODO：数据拷入操作 gdram -> nram
-                .....
-                # TODO：计算描述
-                .....
-                with bp.for_range(...):
-                .....
-                # TODO：数据拷出操作 nram -> gdram
-                .....
+                # 数据拷入操作 gdram -> nram
+                start = i * SHAPE
+                stop = start + SHAPE
+                bp.memcpy(input1_nram, input1[start:stop])
+                bp.memcpy(input2_nram, input2[start:stop])
+                # 计算描述
+                bp.subtract(input1_nram,input1_nram,input2_nram)
+                bp.memcpy(input2_nram,input1_nram)
+                with bp.for_range(0,pow-1):
+                    bp.multiply(input1_nram,input1_nram,input2_nram)
+                # 数据拷出操作 nram -> gdram
+                bp.memcpy(output[start:stop],input1_nram)
         # BPL编译           
         f = bp.BuildBANG(inputs=[input1, input2, len, pow], outputs=[output],
                          kernel_name="PowerDifferenceKernel")

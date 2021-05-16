@@ -1623,7 +1623,39 @@ cnmlStatus_t cnmlComputePluginBertSquadOpForward(
 /* ================================= */
 
 // 添加PowerDifference声明
-......
+struct cnmlPluginPowerDifferenceOpParam{
+  int power;
+  int len;
+  cnmlCoreVersion_t core_version;
+};
+
+typedef cnmlPluginPowerDifferenceOpParam *cnmlPluginPowerDifferenceOpParam_t;
+
+cnmlStatus_t cnmlCreatePluginPowerDifferenceOpParam(
+  cnmlPluginPowerDifferenceOpParam_t *param,
+  int power,
+  int len,
+  cnmlCoreVersion_t core_version
+);
+
+cnmlStatus_t cnmlDestroyPluginPowerDifferenceOpParam(
+  cnmlPluginPowerDifferenceOpParam_t *param
+);
+
+cnmlStatus_t cnmlCreatePluginPowerDifferenceOp(
+  cnmlBaseOp_t *op,
+  cnmlTensor_t *input_tensors,
+  int power,
+  cnmlTensor_t *output_tensors,
+  int len
+);
+
+cnmlStatus_t cnmlComputePluginPowerDifferenceOpForward(
+  cnmlBaseOp_t op,
+  void **inputs,
+  void **outputs,
+  cnrtQueue_t queue
+);
 
 /* ================================= */
 /*  cnmlPluginPowerDifference operation end      */
