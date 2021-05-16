@@ -21,12 +21,12 @@ __mlu_entry__ void gemm16Kernel(half *outputDDR, int8_t *input1DDR, int8_t *inpu
     for(int i = 0; i < all_round; i++)
     {
         // copy GDRAM2SRAM
-        *******************
+        __memcpy(input2SRAM, input2DDR + ROUND * (i * taskDim + clusterId * 4) * k, k * ROUND * 4 * sizeof(int8_t), GDRAM2SRAM);
 
         __sync_cluster();   //设置sync barrier
 
         // copy SRAM2NRAM
-        ******************* 
+        __memcpy(input2NRAM_tmp, input2SRAM + ROUND * coreId * k, k * ROUND * sizeof(int8_t), SRAM2NRAM);
 
         for (int j = 0; j < total_times; j++) {
             __memcpy(input2NRAM + j * k, input2NRAM_tmp + j * 64 * k,
@@ -34,10 +34,10 @@ __mlu_entry__ void gemm16Kernel(half *outputDDR, int8_t *input1DDR, int8_t *inpu
         }
 
         // copy NRAM2WRAM
-	*******************
+        __memcpy(input2WRAM, input2NRAM, ROUND * k * sizeof(int8_t), NRAM2WRAM);
 
         // compute
-	*******************
+        __bang_conv(outputNRAM, input1NRAM, input2WRAM, k, m, 1, 1, 1, 1, 1, ROUND, pos);
 
         // copy NRAM2GDRAM
         for (int j = 0; j < m; j++) {  

@@ -165,13 +165,13 @@ int Mlu_gemm(int8_t *A, int8_t *B, float *C, int32_t M, int32_t N, int32_t K,
   gettimeofday(&start, NULL);
   
   //在mlu上为输入输出开辟空间
-  CNRT_CHECK(cnrtMalloc(...));
-  CNRT_CHECK(cnrtMalloc(...));
-  CNRT_CHECK(cnrtMalloc(...));
+  CNRT_CHECK(cnrtMalloc((void**)&d_c, M * N * sizeof(half)));
+  CNRT_CHECK(cnrtMalloc((void**)&d_a, M * K * sizeof(int8_t)));
+  CNRT_CHECK(cnrtMalloc((void**)&d_w, K * N * sizeof(int8_t)));
 
   //将cpu上的输入拷贝给mlu上的输入
-  CNRT_CHECK(cnrtMemcpy(...);
-  CNRT_CHECK(cnrtMemcpy(...);
+  CNRT_CHECK(cnrtMemcpy(d_a, A, M * K * sizeof(int8_t), CNRT_MEM_TRANS_DIR_HOST2DEV));
+  CNRT_CHECK(cnrtMemcpy(d_w, B, K * N * sizeof(int8_t), CNRT_MEM_TRANS_DIR_HOST2DEV));
 
   gettimeofday(&end, NULL);
   time_use =
@@ -182,7 +182,13 @@ int Mlu_gemm(int8_t *A, int8_t *B, float *C, int32_t M, int32_t N, int32_t K,
   cnrtKernelParamsBuffer_t params;
   CNRT_CHECK(cnrtGetKernelParamsBuffer(&params));     // Gets a parameter buffer for cnrtInvokeKernel_V2 or cnrtInvokeKernel_V3. 
   //向params添加参数
-  ......
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &d_c, sizeof(half*)));
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &d_a, sizeof(int8_t*)));
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &d_w, sizeof(int8_t*)));
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &M, sizeof(int32_t)));
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &K, sizeof(int32_t)));
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &N, sizeof(int32_t)));
+  CNRT_CHECK(cnrtKernelParamsBufferAddParam(params, &pos, sizeof(int16_t)));
  
   cnrtKernelInitParam_t init_param;
   CNRT_CHECK(cnrtCreateKernelInitParam(&init_param));
@@ -200,7 +206,7 @@ int Mlu_gemm(int8_t *A, int8_t *B, float *C, int32_t M, int32_t N, int32_t K,
   CNRT_CHECK(cnrtPlaceNotifier(notifier_start, pQueue));   // Places a notifier in specified queue
 
   // 启动激活函数
-  CNRT_CHECK( cnrtInvokeKernel_V3(...));   // Invokes a kernel written in Bang with given params on MLU
+  CNRT_CHECK( cnrtInvokeKernel_V3((void*)&gemm16Kernel, init_param, dim, params, func_type, pQueue, nullptr));   // Invokes a kernel written in Bang with given params on MLU
  
   CNRT_CHECK(cnrtPlaceNotifier(notifier_end, pQueue));     // Places a notifier in specified queue
 
