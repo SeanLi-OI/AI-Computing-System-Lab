@@ -39,7 +39,7 @@ def power_diff():
         # 计算分片
         quotient = len / SHAPE
         rem = len % SHAPE
-        if SHAPE!=0:
+        if rem!=0:
             quotient += 1
 
         # 条件判断，确保单核运行
