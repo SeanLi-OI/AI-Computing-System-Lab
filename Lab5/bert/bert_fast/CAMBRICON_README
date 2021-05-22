@@ -1,0 +1,30 @@
+```shell
+./run_squad.sh run_mode
+```
+
+Before running, make sure you have set the following variables in run_squad.sh:
+  CHECKPOINT_DIR: path to a finetuned ckpt.
+  OUTPUT_DIR: path to the output directory you want
+
+There are 2 run mode for choice:
+  auto : Firstly, we will freeze the ckpt into a frozen model,
+         then quantify the model as a int model which will be
+         deployed on MLU later.
+  evaluate : If you have generated a frozen model before, just 
+             evaluate directly.
+
+Output:
+  The dev set predictions will be saved into file `predictions.json` in
+  the `output_dir`:
+
+Finally, evaluate the acuraccy of predictions:
+
+```shell
+python $SQUAD_DIR/evaluate-v1.1.py $SQUAD_DIR/dev-v1.1.json ./squad/predictions.json
+```
+
+Which should produce an output like this:
+
+```shell
+{"f1": 88.41249612335034, "exact_match": 81.2488174077578}
+```

@@ -1,0 +1,10 @@
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
+/home/cambricon/xinchao/tensorflow_models/cambricon_examples/yolov3/docs/images/611_result.jpg
