@@ -2267,8 +2267,11 @@ REGISTER_OP("PowerDifference")
     });
 */
 #if CAMBRICON_MLU
-//TODO:完成注册
+//完成注册
 REGISTER_OP("SBC")
-     ......
+    .Input("input: T")
+    .Output("output: T")
+    .Attr("T: type")
+    .SetShapeFn(shape_inference::UnchangedShape);
 #endif  // CAMBRICON_MLU
 }  // namespace tensorflow

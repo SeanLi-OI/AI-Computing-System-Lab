@@ -1084,9 +1084,9 @@ class MLUStream : public internal::StreamInterface {
   }*/
 
 
-//TODO:补齐下面函数
+// 补齐下面函数
   Status SBC(OpKernelContext* ctx, Tensor* input, Tensor* output,int batch_size) {
-    return CommonOpImpl<ops::MLUSBC>(.....);
+    return CommonOpImpl<ops::MLUSBC>(ctx, {input}, {output}, static_cast<void*>(&batch_size));
   }
 
  private:

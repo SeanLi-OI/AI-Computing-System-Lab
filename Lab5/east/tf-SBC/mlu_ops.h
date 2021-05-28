@@ -654,7 +654,7 @@ DECLARE_OP_CLASS(MLUBertSquad);
 DECLARE_OP_CLASS(MLULeakyRelu);
 //DECLARE_OP_CLASS(MLUPowerDifference);
 //TODO:添加SBC
-DECLARE_OP_CLASS(......);
+DECLARE_OP_CLASS(MLUSBC);
 }  // namespace ops
 }  // namespace mlu
 }  // namespace stream_executor

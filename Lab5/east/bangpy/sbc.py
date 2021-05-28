@@ -27,7 +27,8 @@ CHANNELS = 3
 HEIGHT = 672
 WIDTH = 1280
 ALIGN_SIZE = 64
-HWC_SPLIT = ...
+HWC_SPLIT = (HEIGHT*WIDTH//16)*CHANNELS
+DATA_COUNT = ((CHANNELS) * (WIDTH) * (HEIGHT))
 
 def sbc():
     def verify_bp(dtype):
@@ -52,19 +53,20 @@ def sbc():
         b = bp.Scalar(dtype=bangpy.float32, name="b", value=116.78)
         c = bp.Scalar(dtype=bangpy.float32, name="c", value=103.94)
 
-        with bp.for_range(0, ...) as i:
-            temp0[i*3] = a.astype(..., rounding="rd")
-            temp0[i*3+1] = b.astype(..., rounding="rd")
-            temp0[i*3+2] = b.astype(..., rounding="rd")
+        core_loop = 16 // taskDim
+        with bp.for_range(0, 192//3) as i:
+            temp0[i*3] = a.astype(dtype, rounding="rd")
+            temp0[i*3+1] = b.astype(dtype, rounding="rd")
+            temp0[i*3+2] = c.astype(dtype, rounding="rd")
 
         with bp.for_range(0, batch_num_) as i:
-            with bp.for_range(0, ...) as j:
+            with bp.for_range(0, core_loop) as j:
                 #数据拆分拷贝到NRAM
-                bp.memcpy(...)
+                bp.memcpy(split_sub_concat, input_[i][j][task_id])
                 #subtract原语的cycle运算
-                bp.subtract(...)
+                bp.subtract(split_sub_concat, split_sub_concat, temp0, cycle=True)
                 #完成运算后拷贝回GDRAM
-                bp.memcpy(...)
+                bp.memcpy(output_[i][j][task_id], split_sub_concat)
             bp.sync_all()
 
         f = bp.BuildBANG(inputs=[input_, batch_num_], outputs=[output_],

@@ -25,14 +25,17 @@ class MLUSBCOp : public MLUOpKernel {
         ctx->op_device_context()->stream()->implementation());
     Tensor input = ctx->input(0);
 
-    // TODO:参数检查与处理
-    ......
+    // 参数检查与处理
+    const Tensor& a = ctx->input(0);
+    int batch_size = a.dim_size(0);
+    TensorShape shape = TensorShape(input.shape());
 
-    //TODO:输出形状推断及输出内存分配
-    ......
+    // 输出形状推断及输出内存分配
+    Tensor* output;
+    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, shape, &output));
 
     // 调用MLUStream层接口完成算子计算
-    ......
+    OP_REQUIRES_OK(ctx, stream->SBC(ctx, &input, output, batch_size));
   }
 };
 
